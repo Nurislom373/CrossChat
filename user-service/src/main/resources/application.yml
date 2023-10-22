@@ -1,0 +1,46 @@
+logging:
+  level:
+    web: debug
+    root: debug
+    sql: debug
+
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/cross
+    username: cross
+    password: 123
+  cloud:
+    consul:
+      discovery:
+        healthCheckPath: /management/health
+        instanceId: ${spring.application.name}:${spring.profiles.active}:${server.port}
+        service-name: user-service
+        prefer-ip-address: true
+        tags:
+          - profile=${spring.profiles.active}
+          - version=#project.version#
+          - git-version=${git.commit.id.describe:}
+          - git-commit=${git.commit.id.abbrev:}
+          - git-branch=${git.branch:}
+      host: localhost
+      port: 8500
+  task:
+    execution:
+      thread-name-prefix: product-ms-task-
+      pool:
+        core-size: 2
+        max-size: 50
+        queue-capacity: 10000
+    scheduling:
+      thread-name-prefix: product-ms-scheduling-
+      pool:
+        size: 2
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
