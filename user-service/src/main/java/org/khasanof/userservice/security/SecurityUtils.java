@@ -1,12 +1,11 @@
 package org.khasanof.userservice.security;
 
-import com.auth0.jwt.JWT;
-import io.jsonwebtoken.Jwts;
-import org.bouncycastle.pqc.jcajce.provider.bike.BCBIKEPublicKey;
-import org.khasanof.userservice.service.dto.AuthRequestDTO;
-import org.khasanof.userservice.util.JWTUtils;
+import com.nimbusds.jose.shaded.gson.internal.LinkedTreeMap;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author Nurislom
@@ -15,23 +14,19 @@ import java.util.*;
  */
 public class SecurityUtils {
 
-    private final Long expirationTimeLong = 30L;
-
-    public String generateToken(AuthRequestDTO request) {
-        Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", Collections.EMPTY_LIST);
-        return doGenerateToken(request, new ArrayList<>());
+    public static List<GrantedAuthority> extractAuthorityFromClaims(Map<String, Object> claims) {
+        return mapRolesToGrantedAuthorities(getRoleFormClaims(claims));
     }
 
-    private String doGenerateToken(AuthRequestDTO request, List<String> roles) {
-        final Date createdDate = new Date();
-        final Date expirationDate = new Date(createdDate.getTime() + expirationTimeLong * 1000);
-        return JWT.create()
-                .withClaim("roles", roles)
-                .withClaim("createdAt", createdDate)
-                .withSubject(request.getUsername())
-                .withExpiresAt(expirationDate)
-                .sign(JWTUtils.getAlgorithm());
+    @SuppressWarnings("unchecked")
+    private static Collection<String> getRoleFormClaims(Map<String, Object> claims) {
+        LinkedTreeMap<String, List<String>> realmAccess = (LinkedTreeMap<String, List<String>>) claims.get("realm_access");
+        return realmAccess.getOrDefault("roles", Collections.EMPTY_LIST);
+    }
+
+    private static List<GrantedAuthority> mapRolesToGrantedAuthorities(Collection<String> roles) {
+        return roles.stream().filter(role -> role.startsWith("ROLE_"))
+                .map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
 }

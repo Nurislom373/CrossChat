@@ -19,19 +19,19 @@ import java.net.URI;
  */
 @Slf4j
 @RestController
-@RequestMapping(value = "/api")
-public class AuthUserController {
+@RequestMapping(value = "/api/users")
+public class UsersController {
 
     private final AuthUserService service;
 
-    public AuthUserController(AuthUserService service) {
+    public UsersController(AuthUserService service) {
         this.service = service;
     }
 
-    @PostMapping("/auth_user")
+    @PostMapping
     public Mono<ResponseEntity<Void>> create(@RequestBody Mono<AuthUserDTO> mono) {
         return service.create(mono)
-                .then(Mono.fromCallable(() -> ResponseEntity.created(URI.create("/api/auth_user"))
+                .then(Mono.fromCallable(() -> ResponseEntity.created(URI.create("/api/users"))
                         .build()));
 
     }
